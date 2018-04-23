@@ -135,18 +135,18 @@ app.get('/', function(req, res) {
 
 				for (var s = 0; s < a.length; s++) {
 					if (s == 0) {
-						json += '"' + a[s].replace('&#xA0;', '') + '" : {';
+						json += '"' + a[s].replace('&#xA0;', '') + '" : [{';
 					} else {
-						json += '},"' + a[s].replace('&#xA0;', '') + '" : {';
+						json += '}],"' + a[s].replace('&#xA0;', '') + '" : [{';
 					}
 					for (var e = 0; e < keys[s].length; e++) {
-						if (e != keys[s].length - 1) json += '"' + keys[s][e] + '":[' + orari[s][e] + '],';
+						if (e != keys[s].length - 1) json += '"' + keys[s][e] + '":[' + orari[s][e] + ']},{';
 						else json += '"' + keys[s][e] + '":[' + orari[s][e] + ']';
 					}
 				}
 
 				// print json
-				res.send('{' + json + '}}');
+				res.send('{' + json + '}]}');
 			}
 		});
 	}
