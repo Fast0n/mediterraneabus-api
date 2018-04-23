@@ -4,6 +4,7 @@ const request = require('request');
 const app = express();
 
 app.get('/', function(req, res) {
+	res.type('application/json');
 	// check fields
 	if (
 		req.query.periodo == undefined &&
@@ -13,7 +14,7 @@ app.get('/', function(req, res) {
 		var warning = {
 			STATUS: '1',
 			CODE: '200',
-			MESSAGE: 'For help, go here -> https://github.com/Fast0n/Mediterraneabus-api',
+			MESSAGE: 'For help, go here -> https://github.com/Fast0n/mediterraneabus-api',
 			DATA: [],
 			TOTALS: [],
 		};
@@ -105,17 +106,19 @@ app.get('/', function(req, res) {
 							for (var x = 1; x < f.length; x++) {
 								if (f[x].match(rePattern)) {
 									f[x] = f[x].replace(/ /g, '');
-								} else array2[x] = '';
-
-								array2[x] =
-									'"' +
-									f[x]
+									f[x] = f[x]
 										.replace('.', ':')
+										.replace(',', ':')
 										.replace('\t', '')
 										.replace('-', '')
-										.replace(',', ':')
-										.slice(0, -1) +
-									'"';
+										.slice(0, -1);
+
+									if (f[x].split(':')[0].length == 1)
+										f[x] = '0' + f[x].split(':')[0] + ':' + f[x].split(':')[1];
+									else f[x] = f[x].split(':')[0] + ':' + f[x].split(':')[1];
+								} else array2[x] = '';
+
+								array2[x] = '"' + f[x].replace('\t', '') + '"';
 							}
 							if (array2 != '') {
 								array1[num] = array2;
@@ -149,5 +152,4 @@ app.get('/', function(req, res) {
 	}
 });
 
-exports = module.exports = app;
-const server = app.listen(3000, function() {});
+const server = app.listen(process.env.PORT, function() {});
