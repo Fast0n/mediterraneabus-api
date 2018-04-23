@@ -105,7 +105,6 @@ app.get('/', function(req, res) {
 
 							for (var x = 1; x < f.length; x++) {
 								if (f[x].match(rePattern)) {
-									f[x] = f[x].replace(/ /g, '');
 									f[x] = f[x]
 										.replace('.', ':')
 										.replace(',', ':')
@@ -118,7 +117,8 @@ app.get('/', function(req, res) {
 									else f[x] = f[x].split(':')[0] + ':' + f[x].split(':')[1];
 								} else array2[x] = '';
 
-								array2[x] = '"' + f[x].replace('\t', '') + '"';
+								if (array2[x] != '') array2[x] = '"' + f[x].replace('\t', '') + '"';
+								else array2[x] = '"' + '"';
 							}
 							if (array2 != '') {
 								array1[num] = array2;
