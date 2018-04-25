@@ -57,7 +57,7 @@ app.get('/', function(req, res) {
 				var array_corse = [];
 				var c = 0;
 				var d = 0;
-				var json;
+				var json = '';
 				var keys = [];
 				var orari = [];
 				var x = [];
