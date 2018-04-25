@@ -54,19 +54,19 @@ app.get('/', function(req, res) {
 				var results = $('table');
 
 				var a = [];
-				var keys = [];
-				var values = [];
-				var orari = [];
+				var array_corse = [];
 				var c = 0;
 				var d = 0;
-				var e = 0;
-				var json = '';
+				var json;
+				var keys = [];
+				var orari = [];
+				var x = [];
+				var y = [];
 				results.each(function(i, result) {
 					var array = [];
 					var array1 = [];
 					var array2 = [];
 					var num = 0;
-					var x = 0;
 
 					// get title lines
 					var title = $(result)
@@ -134,19 +134,41 @@ app.get('/', function(req, res) {
 				});
 
 				for (var s = 0; s < a.length; s++) {
-					if (s == 0) {
-						json += '"' + a[s].replace('&#xA0;', '') + '" : [{';
-					} else {
-						json += '}],"' + a[s].replace('&#xA0;', '') + '" : [{';
-					}
 					for (var e = 0; e < keys[s].length; e++) {
-						if (e != keys[s].length - 1) json += '"' + keys[s][e] + '":[' + orari[s][e] + ']},{';
-						else json += '"' + keys[s][e] + '":[' + orari[s][e] + ']';
+						if (keys[s][e] == req.query.percorso_linea) {
+							for (var j = 0; j < orari[s][e].length; j++) {
+								if (orari[s][e][j] != '""') {
+									x = x.concat(orari[s][e][j]);
+									array_corse = array_corse.concat(a[s]);
+								}
+							}
+						}
+
+						if (keys[s][e] == req.query.percorso_linea1) {
+							for (var j = 0; j < orari[s][e].length; j++) {
+								if (orari[s][e][j] != '""') {
+									y = y.concat(orari[s][e][j]);
+								}
+							}
+						}
 					}
 				}
 
+				for (var z = 0; z < x.length; z++) {
+					if (x[z] < y[z]) {
+						//console.log(array_corse[z] +'\n ' + x[z] + ' ' + y[z]);
+
+						if (array_corse[z] != array_corse[z - 1]) {
+							json += ']},{"corsa" : "' + array_corse[z].replace('&#xA0;', '') + '", "orari": [ ';
+						}
+
+						json += ' {"partenza" : ' + x[z] + ', "arrivo" : ' + y[z] + '},';
+					}
+				}
 				// print json
-				res.send('{' + json + '}]}');
+				json = '{ "linee": [ {' + json.replace(/},]},{/g, '}]},{') + ']}]}';
+
+				res.send(json.replace(/},]}]}/g, '}]}]}').replace('{ "linee": [ {]},{', '{ "linee": [ {'));
 			}
 		});
 	}
