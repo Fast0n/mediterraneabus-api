@@ -5,8 +5,48 @@ const app = express();
 
 app.get('/', function(req, res) {
 	res.type('application/json');
+	// get route list
+	if (req.query.lista != undefined) {
+		var options = {
+			uri: 'http://www.mediterraneabus.com/',
+			method: 'POST',
+			json: true,
+		};
+
+		request(options, function(error, response, body) {
+			if (!error && response.statusCode == 200) {
+				const $ = cheerio.load(body);
+
+				var array = [];
+				var json = '';
+
+				var results = $('body');
+				results.each(function(i, result) {
+					// take a version
+					$(result)
+						.find('div.contBox')
+						.find('tbody')
+						.find('select[name="percorso_linea"]')
+						.find('option')
+						.each(function(index, element) {
+							array = array.concat([$(element).html()]);
+						});
+
+					json += '{ "routes": [';
+					for (var j = 2; j < array.length; j++) {
+						json += '"' + array[j] + '", ';
+					}
+
+					json = '{ "list": [' + json + ']}';
+					// print json
+					res.send(json.replace('", ]}', '"]}]}'));
+				});
+			}
+		});
+	}
+
 	// check fields
-	if (
+	else if (
 		req.query.periodo == undefined &&
 		req.query.percorso_linea == undefined &&
 		req.query.percorso_linea1 == undefined
@@ -20,6 +60,7 @@ app.get('/', function(req, res) {
 		};
 		res.json(warning);
 	}
+
 	if (
 		req.query.periodo != undefined &&
 		req.query.percorso_linea1 != undefined &&
@@ -54,19 +95,24 @@ app.get('/', function(req, res) {
 				var results = $('table');
 
 				var a = [];
+
+				var x = [];
+				var y = [];
+
+				var keys = [];
+				var values = [];
+				var orari = [];
 				var array_corse = [];
 				var c = 0;
 				var d = 0;
+
 				var json = '';
-				var keys = [];
-				var orari = [];
-				var x = [];
-				var y = [];
 				results.each(function(i, result) {
 					var array = [];
 					var array1 = [];
 					var array2 = [];
 					var num = 0;
+					var x = 0;
 
 					// get title lines
 					var title = $(result)
@@ -156,8 +202,6 @@ app.get('/', function(req, res) {
 
 				for (var z = 0; z < x.length; z++) {
 					if (x[z] < y[z]) {
-						//console.log(array_corse[z] +'\n ' + x[z] + ' ' + y[z]);
-
 						if (array_corse[z] != array_corse[z - 1]) {
 							json += ']},{"corsa" : "' + array_corse[z].replace('&#xA0;', '') + '", "orari": [ ';
 						}

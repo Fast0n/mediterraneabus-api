@@ -24,3 +24,20 @@ The standard JSON array
 - title lines
 - bus stop
 - hours
+
+## Methods
+#### lista
+Get list routes for the Mediterraneabus S.p.A bus.
+
+Parameters:
+- lista [optional] - empty
+
+
+Example Usage:
+```
+mediterraneabus-api.herokuapp.com/?lista
+```
+Returns
+The standard JSON array
+
+- routes lines
