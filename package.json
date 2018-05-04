@@ -1,6 +1,6 @@
 {
     "name": "mediterraneabus-api",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "API for the site Mediterraneabus.com",
     "scripts": {
       "start": "node server.js"
@@ -8,7 +8,8 @@
     "dependencies": {
       "express": "^4.16.3",
       "request": "^2.85.0",
-      "cheerio": "^0.22.0"
+      "cheerio": "^0.22.0",
+      "fs": "^0.0.2"
     },
     "engines": {
       "node": "9.x"
@@ -16,10 +17,5 @@
     "repository": {
       "url": "github.com/fast0n/meditserraneabus-api"
     },
-    "license": "MIT",
-    "keywords": [
-      "node",
-      "glitch",
-      "express"
-    ]
+    "license": "MIT"
   }

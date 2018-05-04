@@ -10,6 +10,7 @@ Parameters:
 - periodo [required] - choice of period between 'invernale' and 'estiva'
 - percorso_linea [required] - route bus line in the list data
 - percorso_linea1 [required] - route bus line in the list data
+- sort_by [optional] - choice of sort between 'time' and 'line'
 
 
 Example Usage:
@@ -17,13 +18,14 @@ Example Usage:
 mediterraneabus-api.herokuapp.com/?periodo=invernale&
                                   percorso_linea=Ardore - stazione FS&
                                   percorso_linea1=Siderno - piazza Portosalvo
+                                  &sort_by=time
 ```
 Returns
 The standard JSON array
 
 - title lines
 - bus stop
-- hours
+- timetables
 
 ## Methods
 #### lista
