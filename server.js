@@ -419,4 +419,4 @@ app.get('/', function(req, res) {
 	}
 });
 
-const server = app.listen(process.env.PORT, function() {});
+const server = app.listen(process.env.PORT || 3000, function() {});
