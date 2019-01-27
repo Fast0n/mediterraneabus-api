@@ -1,422 +1,241 @@
-const express = require('express');
-const cheerio = require('cheerio');
-const request = require('request');
-const fs = require('fs');
+const express = require("express");
+const cheerio = require("cheerio");
+const request = require("request");
 const app = express();
 
-app.get('/', function(req, res) {
-	res.type('application/json');
-	// check fields
+app.get("/", function (req, res) {
+  res.type("application/json");
+  // check fields
 
-	if (req.query.lista != undefined) {
-		var options = {
-			uri: 'http://www.mediterraneabus.com/',
-			method: 'POST',
-			json: true,
-		};
+  if (req.query.lista != undefined) {
+    var options = {
+      uri: "http://www.mediterraneabus.com/",
+      method: "POST",
+      json: true
+    };
 
-		request(options, function(error, response, body) {
-			if (!error && response.statusCode == 200) {
-				const $ = cheerio.load(body);
+    request(options, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        const $ = cheerio.load(body);
 
-				var array = [];
-				var json = '';
+        var array = [];
 
-				var results = $('body');
-				results.each(function(i, result) {
-					// take a version
-					$(result)
-						.find('div.contBox')
-						.find('tbody')
-						.find('select[name="percorso_linea"]')
-						.find('option')
-						.each(function(index, element) {
-							array = array.concat([$(element).html()]);
-						});
+        var results = $("body");
+        results.each(function (i, result) {
+          // take a version
+          $(result)
+            .find("div.contBox")
+            .find("tbody")
+            .find('select[name="percorso_linea"]')
+            .find("option")
+            .each(function (index, element) {
+              array = array.concat([$(element).text()]);
+            });
 
-					json += '{ "routes": [';
-					for (var j = 2; j < array.length; j++) {
-						json += '"' + array[j].replace('&apos;', "'") + '", ';
-					}
+          var data_store = {};
+          data_store["list"] = {};
+          data_store["list"]["routes"] = [];
 
-					json = '{ "list": [' + json + ']}';
-					res.send(json.replace('", ]}', '"]}]}'));
-				});
-			}
-		});
-	} else if (
-		req.query.periodo == undefined &&
-		req.query.percorso_linea == undefined &&
-		req.query.percorso_linea1 == undefined
-	) {
-		var warning = {
-			STATUS: '1',
-			CODE: '200',
-			MESSAGE: 'For help, go here -> https://github.com/Fast0n/mediterraneabus-api',
-			DATA: [],
-			TOTALS: [],
-		};
-		res.json(warning);
-	}
+          for (var j = 2; j < array.length; j++)
+            data_store["list"]["routes"][j - 2] = array[j].replace(
+              "&apos;",
+              "'"
+            );
 
-	if (
-		req.query.periodo != undefined &&
-		req.query.percorso_linea1 != undefined &&
-		req.query.percorso_linea1 != undefined &&
-		req.query.sort_by == 'time'
-	) {
-		sort_timetable();
-	} else if (
-		req.query.periodo != undefined &&
-		req.query.percorso_linea1 != undefined &&
-		req.query.percorso_linea1 != undefined &&
-		req.query.sort_by == 'line'
-	) {
-		view_timetable();
-	} else if (
-		req.query.periodo != undefined &&
-		req.query.percorso_linea1 != undefined &&
-		req.query.percorso_linea1 != undefined
-	) {
-		view_timetable();
-	}
+          res.send(data_store);
+        });
+      }
+    });
+  } else if (
+    req.query.periodo == undefined &&
+    req.query.percorso_linea == undefined &&
+    req.query.percorso_linea1 == undefined
+  ) {
+    var warning = {
+      STATUS: "1",
+      CODE: "200",
+      MESSAGE: "For help, go here -> https://github.com/Fast0n/mediterraneabus-api",
+      DATA: [],
+      TOTALS: []
+    };
+    res.json(warning);
+  }
 
-	function view_timetable() {
-		var JSONformData = {
-			tipo_linee: 'percorso',
-			stagione: req.query.periodo,
-			giorno: 'feriale',
-			percorso_linea: req.query.percorso_linea,
-			percorso_linea1: req.query.percorso_linea1,
-			btLineePercorso: '',
-		};
+  if (
+    req.query.periodo != undefined &&
+    req.query.percorso_linea1 != undefined &&
+    req.query.percorso_linea1 != undefined &&
+    req.query.sort_by == "time"
+  ) {
+    view_timetable(true);
+  } else if (
+    req.query.periodo != undefined &&
+    req.query.percorso_linea1 != undefined &&
+    req.query.percorso_linea1 != undefined &&
+    req.query.sort_by == "line"
+  ) {
+    view_timetable(false);
+  } else if (
+    req.query.periodo != undefined &&
+    req.query.percorso_linea1 != undefined &&
+    req.query.percorso_linea1 != undefined
+  ) {
+    view_timetable(false);
+  }
 
-		var options = {
-			uri: 'http://www.mediterraneabus.com/linee',
-			method: 'POST',
-			json: true,
-			form: JSONformData,
-		};
+  function view_timetable(result) {
+    var JSONformData = {
+      tipo_linee: "percorso",
+      stagione: req.query.periodo,
+      giorno: "feriale",
+      percorso_linea: req.query.percorso_linea,
+      percorso_linea1: req.query.percorso_linea1,
+      btLineePercorso: ""
+    };
 
-		request(options, function(error, response, body) {
-			if (!error && response.statusCode == 200) {
-				var html = body
-					.replace(/<td><strong>Corse/g, '<td><titolo>Corse')
-					.replace(/<td nowrap><strong>Fermate/g, '<td nowrap><null>Fermate')
-					.replace(/<strong>Stagione/g, '<null>Stagione')
-					.replace(/<strong>Orario/g, '<null>Orario')
-					.replace(/<td><strong>/g, '<ts><strong>');
+    var options = {
+      uri: "http://www.mediterraneabus.com/linee",
+      method: "POST",
+      json: true,
+      form: JSONformData
+    };
 
-				const $ = cheerio.load(html);
-				var results = $('table');
+    request(options, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        var html = body
+          .replace(/<td><strong>Corse/g, "<td><titolo>Corse")
+          .replace(/<td nowrap><strong>Fermate/g, "<td nowrap><null>Fermate")
+          .replace(/<strong>Stagione/g, "<null>Stagione")
+          .replace(/<strong>Orario/g, "<null>Orario")
+          .replace(/<td><strong>/g, "<ts><strong>");
 
-				var a = [];
+        const $ = cheerio.load(html);
+        var results = $("table");
+        var data_store = {};
+        var json_store = {};
 
-				var x = [];
-				var y = [];
+        var var_a = [];
+        var keys = [];
+        var orari = [];
+        var var_b = 0;
+        var var_c = 0;
+        results.each(function (i, result) {
+          var array = [];
+          var array1 = [];
+          var array2 = [];
+          var var_d = 0;
 
-				var keys = [];
-				var values = [];
-				var orari = [];
-				var array_corse = [];
-				var c = 0;
-				var d = 0;
+          // get title lines
+          var title = $(result)
+            .find("tr")
+            .find("td")
+            .find("titolo")
+            .html();
+          if (title != "" && title != null) {
+            var b = [title];
+            var_a = var_a.concat(b);
+          }
 
-				var json = '';
-				results.each(function(i, result) {
-					var array = [];
-					var array1 = [];
-					var array2 = [];
-					var num = 0;
-					var x = 0;
+          // get bus stop
+          $(result)
+            .find("ts")
+            .find("strong")
+            .each(function (index, element) {
+              array = array.concat([$(element).text()]);
+            });
+          if (array != "") {
+            keys[var_b] = array;
+            var_b++;
+          }
 
-					// get title lines
-					var title = $(result)
-						.find('tr')
-						.find('td')
-						.find('titolo')
-						.html();
-					if (title != '' && title != null) {
-						var b = [title];
-						a = a.concat(b);
-					}
+          // get hours
+          $(result)
+            .find("tr")
+            .children("ts")
+            .each(function (index, element) {
+              var time = $(element)
+                .text()
+                .split("\r\n");
 
-					// get bus stop
-					$(result)
-						.find('ts')
-						.find('strong')
-						.each(function(index, element) {
-							array = array.concat([$(element).text()]);
-						});
-					if (array != '') {
-						keys[c] = array;
-						c++;
-					}
+              // regex Pattern
+              var rePattern = new RegExp("([0-9]+.)");
 
-					// get timetables
-					$(result)
-						.find('tr')
-						.children('ts')
-						.each(function(index, element) {
-							var f = $(element)
-								.text()
-								.split('\r\n');
+              for (var x = 1; x < time.length; x++) {
+                if (time[x].match(rePattern)) {
+                  time[x] = time[x]
+                    .replace(".", ":")
+                    .replace(",", ":")
+                    .replace("\t", "")
+                    .replace("-", "")
+                    .slice(0, -1);
 
-							// regex Pattern
-							var rePattern = new RegExp('([0-9]+.)');
+                  if (time[x].split(":")[0].length == 1)
+                    time[x] = "0" + time[x].split(":")[0] + ":" + time[x].split(":")[1];
+                  else time[x] = time[x].split(":")[0] + ":" + time[x].split(":")[1];
+                } else array2[x] = "";
 
-							for (var x = 1; x < f.length; x++) {
-								if (f[x].match(rePattern)) {
-									f[x] = f[x]
-										.replace('.', ':')
-										.replace(',', ':')
-										.replace('\t', '')
-										.replace('-', '')
-										.slice(0, -1);
+                if (array2[x] != "") array2[x] = time[x].replace("\t", "");
+                else array2[x] = "";
+              }
+              if (array2 != "") {
+                array1[var_d] = array2;
+                array1[var_d] = array1[var_d].filter(Boolean);
+                var_d++;
+              }
+            });
 
-									if (f[x].split(':')[0].length == 1)
-										f[x] = '0' + f[x].split(':')[0] + ':' + f[x].split(':')[1];
-									else f[x] = f[x].split(':')[0] + ':' + f[x].split(':')[1];
-								} else array2[x] = '';
+          if (array1 != "") {
+            orari[var_c] = array1;
+            var_c++;
+          }
+        });
 
-								if (array2[x] != '') array2[x] = '"' + f[x].replace('\t', '') + '"';
-								else array2[x] = '"' + '"';
-							}
-							if (array2 != '') {
-								array1[num] = array2;
-								array1[num] = array1[num].filter(Boolean);
-								num++;
-							}
-						});
+        json_store["linee"] = [];
+        var global_counter = -1;
+        for (var x = 0; x < var_a.length; x++) {
+          data_store[x] = [];
 
-					if (array1 != '') {
-						orari[d] = array1;
-						d++;
-					}
-				});
+          for (var counter = 0; counter < keys[x].length; counter++) {
+            data_store[x]["title"] = var_a[x];
+            data_store[x][keys[x][counter]] = orari[x][counter];
+          }
+        }
 
-				for (var s = 0; s < a.length; s++) {
-					for (var e = 0; e < keys[s].length; e++) {
-						if (keys[s][e] == req.query.percorso_linea) {
-							for (var j = 0; j < orari[s][e].length; j++) {
-								if (orari[s][e][j] != '""') {
-									x = x.concat(orari[s][e][j]);
-									array_corse = array_corse.concat(a[s]);
-								}
-							}
-						}
+        for (var y = 0; y < Object.keys(data_store).length; y++) {
+          try {
+            global_counter++;
+            for (
+              var z = 0; z < data_store[y][req.query.percorso_linea].length; z++
+            ) {
+              if (
+                data_store[y][req.query.percorso_linea][z] != undefined ||
+                data_store[y][req.query.percorso_linea1][z] != undefined
+              ) {
+                json_store["linee"][global_counter] = {};
+                json_store["linee"][global_counter]["corsa"] = data_store[y]["title"];
+                json_store["linee"][global_counter]["orari"] = [];
 
-						if (keys[s][e] == req.query.percorso_linea1) {
-							for (var j = 0; j < orari[s][e].length; j++) {
-								if (orari[s][e][j] != '""') {
-									y = y.concat(orari[s][e][j]);
-								}
-							}
-						}
-					}
-				}
+                for (var counter = -1; counter < z; counter++) {
+                  json_store["linee"][global_counter]["orari"][counter + 1] = {};
+                  json_store["linee"][global_counter]["orari"][counter + 1]["partenza"] =
+                    data_store[y][req.query.percorso_linea][counter + 1];
+                  json_store["linee"][global_counter]["orari"][counter + 1]["arrivo"] =
+                    data_store[y][req.query.percorso_linea1][counter + 1];
+                }
+              }
+            }
+          } catch (err) {
+            global_counter--;
+          }
+        }
+        if (result == false)
+          res.send(json_store);
+        else
+          res.send("sort by time")
 
-				for (var z = 0; z < x.length; z++) {
-					if (x[z] < y[z]) {
-						if (array_corse[z] != array_corse[z - 1]) {
-							json += ']},{"corsa" : "' + array_corse[z].replace('&#xA0;', '') + '", "orari": [ ';
-						}
-
-						json += ' {"partenza" : ' + x[z] + ', "arrivo" : ' + y[z] + '},';
-					}
-				}
-				// print json
-				json = '{ "linee": [ {' + json.replace(/},]},{/g, '}]},{') + ']}]}';
-
-				res.send(json.replace(/},]}]}/g, '}]}]}').replace('{ "linee": [ {]},{', '{ "linee": [ {'));
-			}
-		});
-	}
-
-	function sort_timetable() {
-		var JSONformData = {
-			tipo_linee: 'percorso',
-			stagione: req.query.periodo,
-			giorno: 'feriale',
-			percorso_linea: req.query.percorso_linea,
-			percorso_linea1: req.query.percorso_linea1,
-			btLineePercorso: '',
-		};
-
-		var options = {
-			uri: 'http://www.mediterraneabus.com/linee',
-			method: 'POST',
-			json: true,
-			form: JSONformData,
-		};
-
-		request(options, function(error, response, body) {
-			if (!error && response.statusCode == 200) {
-				var html = body
-					.replace(/<td><strong>Corse/g, '<td><titolo>Corse')
-					.replace(/<td nowrap><strong>Fermate/g, '<td nowrap><null>Fermate')
-					.replace(/<strong>Stagione/g, '<null>Stagione')
-					.replace(/<strong>Orario/g, '<null>Orario')
-					.replace(/<td><strong>/g, '<ts><strong>');
-
-				const $ = cheerio.load(html);
-				var results = $('table');
-
-				var a = [];
-
-				var x = [];
-				var y = [];
-
-				var keys = [];
-				var values = [];
-				var orari = [];
-				var array_corse = [];
-				var c = 0;
-				var d = 0;
-
-				var json = '';
-				results.each(function(i, result) {
-					var array = [];
-					var array1 = [];
-					var array2 = [];
-					var num = 0;
-					var x = 0;
-
-					// get title lines
-					var title = $(result)
-						.find('tr')
-						.find('td')
-						.find('titolo')
-						.html();
-					if (title != '' && title != null) {
-						var b = [title];
-						a = a.concat(b);
-					}
-
-					// get bus stop
-					$(result)
-						.find('ts')
-						.find('strong')
-						.each(function(index, element) {
-							array = array.concat([$(element).text()]);
-						});
-					if (array != '') {
-						keys[c] = array;
-						c++;
-					}
-
-					// get timetables
-					$(result)
-						.find('tr')
-						.children('ts')
-						.each(function(index, element) {
-							var f = $(element)
-								.text()
-								.split('\r\n');
-
-							// regex Pattern
-							var rePattern = new RegExp('([0-9]+.)');
-
-							for (var x = 1; x < f.length; x++) {
-								if (f[x].match(rePattern)) {
-									f[x] = f[x]
-										.replace('.', ':')
-										.replace(',', ':')
-										.replace('\t', '')
-										.replace('-', '')
-										.slice(0, -1);
-
-									if (f[x].split(':')[0].length == 1)
-										f[x] = '0' + f[x].split(':')[0] + ':' + f[x].split(':')[1];
-									else f[x] = f[x].split(':')[0] + ':' + f[x].split(':')[1];
-								} else array2[x] = '';
-
-								if (array2[x] != '') array2[x] = '"' + f[x].replace('\t', '') + '"';
-								else array2[x] = '"' + '"';
-							}
-							if (array2 != '') {
-								array1[num] = array2;
-								array1[num] = array1[num].filter(Boolean);
-								num++;
-							}
-						});
-
-					if (array1 != '') {
-						orari[d] = array1;
-						d++;
-					}
-				});
-
-				for (var s = 0; s < a.length; s++) {
-					for (var e = 0; e < keys[s].length; e++) {
-						if (keys[s][e] == req.query.percorso_linea) {
-							for (var j = 0; j < orari[s][e].length; j++) {
-								if (orari[s][e][j] != '""') {
-									x = x.concat(orari[s][e][j]);
-									array_corse = array_corse.concat(a[s]);
-								}
-							}
-						}
-
-						if (keys[s][e] == req.query.percorso_linea1) {
-							for (var j = 0; j < orari[s][e].length; j++) {
-								if (orari[s][e][j] != '""') {
-									y = y.concat(orari[s][e][j]);
-								}
-							}
-						}
-					}
-				}
-
-				for (var z = 0; z < x.length; z++) {
-					if (x[z] < y[z]) {
-						if (array_corse[z] != array_corse[z - 1]) {
-							json += ']},{"corsa" : "' + array_corse[z].replace('&#xA0;', '') + '", "orari": [ ';
-						}
-
-						json += ' {"partenza" : ' + x[z] + ', "arrivo" : ' + y[z] + '},';
-					}
-				}
-				// get json
-				json = '{ "linee": [ {' + json.replace(/},]},{/g, '}]},{') + ']}]}';
-				json = json.replace(/},]}]}/g, '}]}]}').replace('{ "linee": [ {]},{', '{ "linee": [ {');
-
-				let new_json = JSON.parse(json);
-
-				var array = '';
-
-				for (var a = 0; a < new_json['linee'].length; a++) {
-					for (var b = 0; b < new_json['linee'][a]['orari'].length; b++) {
-						array +=
-							new_json['linee'][a]['orari'][b]['partenza'] +
-							'$' +
-							new_json['linee'][a]['orari'][b]['arrivo'] +
-							'£' +
-							new_json['linee'][a]['corsa'] +
-							'\n';
-					}
-				}
-
-				var array1 = array.split('\n').sort();
-
-				var json = '{ "linee": [';
-
-				for (var c = 1; c < array1.length; c++) {
-					json +=
-						'{"corsa": "' +
-						array1[c].split('$')[1].split('£')[1] +
-						'","orari": [{ "partenza": "' +
-						array1[c].split('$')[0] +
-						'", "arrivo": "' +
-						array1[c].split('$')[1].split('£')[0] +
-						'"}] },';
-				}
-				json = json + '__';
-				// print json
-				res.send(json.replace('"}] },__', '"}] }]}'));
-			}
-		});
-	}
+      }
+    });
+  }
 });
 
-const server = app.listen(process.env.PORT || 3000, function() {});
+const server = app.listen(process.env.PORT || 3000, function () {});
