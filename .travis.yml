@@ -5,7 +5,7 @@ before_script:
   - npm install cheerio
   - npm install express
   - npm install request
-  - mpm install sort-json-array
+  - npm install sort-json-array
 script:
   - node server.js &
   - npm test
