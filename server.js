@@ -1,6 +1,7 @@
 const express = require("express");
 const cheerio = require("cheerio");
 const request = require("request");
+const sortJsonArray = require('sort-json-array');
 const app = express();
 
 app.get("/", function (req, res) {
@@ -112,7 +113,7 @@ app.get("/", function (req, res) {
         const $ = cheerio.load(html);
         var results = $("table");
         var data_store = {};
-        var json_store = {};
+        var json_store = [];
 
         var var_a = [];
         var keys = [];
@@ -190,8 +191,8 @@ app.get("/", function (req, res) {
           }
         });
 
-        json_store["linee"] = [];
-        var global_counter = -1;
+
+
         for (var x = 0; x < var_a.length; x++) {
           data_store[x] = [];
 
@@ -201,9 +202,11 @@ app.get("/", function (req, res) {
           }
         }
 
+        var global_counter = 0
+
         for (var y = 0; y < Object.keys(data_store).length; y++) {
           try {
-            global_counter++;
+
             for (
               var z = 0; z < data_store[y][req.query.percorso_linea].length; z++
             ) {
@@ -211,31 +214,30 @@ app.get("/", function (req, res) {
                 data_store[y][req.query.percorso_linea][z] != undefined ||
                 data_store[y][req.query.percorso_linea1][z] != undefined
               ) {
-                json_store["linee"][global_counter] = {};
-                json_store["linee"][global_counter]["corsa"] = data_store[y]["title"];
-                json_store["linee"][global_counter]["orari"] = [];
+
+
+                json_store[global_counter] = {}
 
                 for (var counter = -1; counter < z; counter++) {
-                  json_store["linee"][global_counter]["orari"][counter + 1] = {};
-                  json_store["linee"][global_counter]["orari"][counter + 1]["partenza"] =
-                    data_store[y][req.query.percorso_linea][counter + 1];
-                  json_store["linee"][global_counter]["orari"][counter + 1]["arrivo"] =
-                    data_store[y][req.query.percorso_linea1][counter + 1];
+                  if (data_store[y][req.query.percorso_linea1][counter + 1] > data_store[y][req.query.percorso_linea][counter + 1]) {
+                    json_store[global_counter]['a'] = data_store[y]["title"]
+                    json_store[global_counter]['b'] = data_store[y][req.query.percorso_linea][counter + 1]
+                    json_store[global_counter]['c'] = data_store[y][req.query.percorso_linea1][counter + 1]
+                  }
                 }
+                global_counter++
               }
             }
-          } catch (err) {
-            global_counter--;
-          }
+          } catch (err) {}
         }
         if (result == false)
-          res.send(json_store);
+          res.send(sortJsonArray(json_store, 'a'));
         else
-          res.send("sort by time")
+          res.send(sortJsonArray(json_store, 'b'));
 
       }
     });
   }
 });
 
-const server = app.listen(process.env.PORT || 3000, function () {});
+const server = app.listen(process.env.PORT || 1331, function () {});

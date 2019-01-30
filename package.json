@@ -9,7 +9,7 @@
       "express": "^4.16.3",
       "request": "^2.85.0",
       "cheerio": "^0.22.0",
-      "fs": "^0.0.2"
+      "sort-json-array": "^0.1.7"
     },
     "engines": {
       "node": "9.x"
