@@ -1,6 +1,5 @@
 # Mediterraneabus API
-<a href="https://paypal.me/fast0n" title="Donate"><img src="https://img.shields.io/badge/Donate-PayPal-009cde.svg?style=flat-square"></a>
-[![Build Status](https://travis-ci.org/Fast0n/mediterraneabus-api.svg?branch=master)](https://travis-ci.org/Fast0n/mediterraneabus-api)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-blue?style=flat-square)](https://paypal.me/fast0n) ![GitHub package.json version](https://img.shields.io/github/package-json/v/fast0n/mediterraneabus-api) [![License](https://img.shields.io/github/license/Fast0n/mediterraneabus-api)](https://github.com/Fast0n/mediterraneabus-api/blob/master/LICENSE) [![Build Status](https://travis-ci.org/Fast0n/mediterraneabus-api.svg?branch=master)](https://travis-ci.org/Fast0n/mediterraneabus-api) 
 
 ## Methods
 #### search
@@ -43,3 +42,6 @@ Returns
 The standard JSON array
 
 - routes lines
+
+# Result
+![JSON result](img/result.png)

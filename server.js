@@ -86,6 +86,7 @@ app.get("/", function (req, res) {
 
   function view_timetable(result) {
     var JSONformData = {
+      cmd: "elenco",
       tipo_linee: "percorso",
       stagione: req.query.periodo,
       giorno: "feriale",
@@ -95,7 +96,7 @@ app.get("/", function (req, res) {
     };
 
     var options = {
-      uri: "http://www.mediterraneabus.com/linee",
+      uri: "http://www.mediterraneabus.com/chkLinee.php",
       method: "POST",
       json: true,
       form: JSONformData
@@ -156,19 +157,20 @@ app.get("/", function (req, res) {
             .each(function (index, element) {
               var time = $(element)
                 .text()
-                .split("\r\n");
+                .split("\n\t\t\t\t\t\t\t");
+
 
               // regex Pattern
               var rePattern = new RegExp("([0-9]+.)");
 
-              for (var x = 1; x < time.length; x++) {
+              for (var x = 0; x < time.length; x++) {
                 if (time[x].match(rePattern)) {
                   time[x] = time[x]
                     .replace(".", ":")
                     .replace(",", ":")
                     .replace("\t", "")
                     .replace("-", "")
-                    .slice(0, -1);
+                    .replace("Apri/stampa", "");
 
                   if (time[x].split(":")[0].length == 1)
                     time[x] = "0" + time[x].split(":")[0] + ":" + time[x].split(":")[1];
@@ -199,6 +201,7 @@ app.get("/", function (req, res) {
           for (var counter = 0; counter < keys[x].length; counter++) {
             data_store[x]["title"] = var_a[x];
             data_store[x][keys[x][counter]] = orari[x][counter];
+
           }
         }
 

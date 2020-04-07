@@ -1,21 +1,21 @@
 {
-    "name": "mediterraneabus-api",
-    "version": "0.0.2",
-    "description": "API for the site Mediterraneabus.com",
-    "scripts": {
-      "start": "node server.js"
-    },
-    "dependencies": {
-      "express": "^4.16.3",
-      "request": "^2.85.0",
-      "cheerio": "^0.22.0",
-      "sort-json-array": "^0.1.7"
-    },
-    "engines": {
-      "node": "9.x"
-    },
-    "repository": {
-      "url": "github.com/fast0n/meditserraneabus-api"
-    },
-    "license": "MIT"
-  }
+  "name": "mediterraneabus-api",
+  "version": "0.0.3",
+  "description": "API for the site Mediterraneabus.com",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "request": "^2.88.2",
+    "cheerio": "^0.22.0",
+    "sort-json-array": "^0.1.7"
+  },
+  "engines": {
+    "node": "9.x"
+  },
+  "repository": {
+    "url": "github.com/fast0n/meditserraneabus-api"
+  },
+  "license": "MIT"
+}
