@@ -1,3 +1,7 @@
+# Deprecated!
+
+As of Oct 21th 2022, Mediterraneabus API is fully deprecated. No new changes are expected to land.
+
 # Mediterraneabus API
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue?style=flat-square)](https://paypal.me/fast0n) ![GitHub package.json version](https://img.shields.io/github/package-json/v/fast0n/mediterraneabus-api) [![License](https://img.shields.io/github/license/Fast0n/mediterraneabus-api)](https://github.com/Fast0n/mediterraneabus-api/blob/master/LICENSE) [![Build Status](https://travis-ci.org/Fast0n/mediterraneabus-api.svg?branch=master)](https://travis-ci.org/Fast0n/mediterraneabus-api) 
 
